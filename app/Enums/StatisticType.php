@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Enums;
+
+enum StatisticType: string
+{
+    case REVENUE = 'REVENUE';
+    case OCCUPANCY_RATE = 'OCCUPANCY_RATE';
+    case AVERAGE_STAY_DURATION = 'AVERAGE_STAY_DURATION';
+    case BOOKINGS_COUNT = 'BOOKINGS_COUNT';
+    case CANCELLATION_RATE = 'CANCELLATION_RATE';
+    case CUSTOMER_SATISFACTION = 'CUSTOMER_SATISFACTION';
+}

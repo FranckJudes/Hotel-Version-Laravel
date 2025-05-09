@@ -1,0 +1,2184 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API de Gestion Hôtelière",
+        "description": "Documentation de l'API du système de gestion hôtelière",
+        "contact": {
+            "name": "Support API",
+            "email": "contact@hotel.com"
+        },
+        "license": {
+            "name": "Licence propriétaire",
+            "url": "https://www.hotel.com/licence"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Environnement de l'API"
+        }
+    ],
+    "paths": {
+        "/api/v1/admin/blog": {
+            "get": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Récupérer tous les articles de blog",
+                "description": "Récupère la liste de tous les articles de blog avec possibilité de filtrage",
+                "operationId": "getAdminBlogPosts",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "published",
+                                "archived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "author_id",
+                        "in": "query",
+                        "description": "Filtrer par auteur",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "description": "Filtrer par tag",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Recherche par titre ou contenu",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Champ pour le tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "title",
+                                "published_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Ordre de tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des articles récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/BlogPost"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/inbox": {
+            "get": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Récupérer les messages reçus",
+                "description": "Récupère la liste des messages reçus avec possibilité de filtrage",
+                "operationId": "getInboxMessages",
+                "parameters": [
+                    {
+                        "name": "read",
+                        "in": "query",
+                        "description": "Filtrer par statut de lecture",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "sender_id",
+                        "in": "query",
+                        "description": "Filtrer par expéditeur",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Recherche dans le sujet ou le contenu",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des messages reçus récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Message"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "unread_count": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/reservations": {
+            "get": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Récupérer toutes les réservations",
+                "description": "Récupère la liste de toutes les réservations avec possibilité de filtrage",
+                "operationId": "getAdminReservations",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "confirmed",
+                                "checked_in",
+                                "checked_out",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "description": "Date de début pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "description": "Date de fin pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filtrer par utilisateur",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "room_id",
+                        "in": "query",
+                        "description": "Filtrer par chambre",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Champ pour le tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "check_in_date",
+                                "check_out_date",
+                                "total_amount"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Ordre de tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Reservation"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/rooms": {
+            "get": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Récupérer toutes les chambres",
+                "description": "Récupère la liste de toutes les chambres disponibles dans l'hôtel",
+                "operationId": "getRooms",
+                "responses": {
+                    "200": {
+                        "description": "Liste des chambres récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "number": {
+                                                        "type": "string",
+                                                        "example": "101"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "standard"
+                                                    },
+                                                    "price_per_night": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 99.99
+                                                    },
+                                                    "capacity": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Chambre standard avec vue sur le jardin"
+                                                    },
+                                                    "features": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "example": [
+                                                            "wifi",
+                                                            "climatisation"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "available",
+                                                            "occupied",
+                                                            "maintenance"
+                                                        ],
+                                                        "example": "available"
+                                                    },
+                                                    "images": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "room_id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "image_path": {
+                                                                    "type": "string",
+                                                                    "example": "rooms/room1.jpg"
+                                                                },
+                                                                "is_primary": {
+                                                                    "type": "boolean",
+                                                                    "example": true
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Créer une nouvelle chambre",
+                "description": "Crée une nouvelle chambre avec les informations fournies",
+                "operationId": "createRoom",
+                "requestBody": {
+                    "description": "Informations de la chambre",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "number",
+                                    "type",
+                                    "price_per_night",
+                                    "capacity",
+                                    "description",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "number": {
+                                        "type": "string",
+                                        "example": "101"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "standard"
+                                    },
+                                    "price_per_night": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Chambre standard avec vue sur le jardin"
+                                    },
+                                    "features": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "wifi",
+                                            "climatisation"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "occupied",
+                                            "maintenance"
+                                        ],
+                                        "example": "available"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Chambre créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chambre créée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Room"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/rooms": {
+            "get": {
+                "tags": [
+                    "Chambres (Public)"
+                ],
+                "summary": "Récupérer les chambres disponibles (public)",
+                "description": "Récupère la liste des chambres disponibles avec filtres",
+                "operationId": "getPublicRooms",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type de chambre",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "capacity",
+                        "in": "query",
+                        "description": "Capacité minimale",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "description": "Prix minimum par nuit",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "description": "Prix maximum par nuit",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "features",
+                        "in": "query",
+                        "description": "Fonctionnalités séparées par des virgules",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Champ de tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "price_per_night",
+                                "capacity"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Ordre de tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des chambres disponibles récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PaginatedRoomsList"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/statistics/dashboard": {
+            "get": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Récupérer les statistiques du tableau de bord",
+                "description": "Récupère les principales statistiques pour le tableau de bord administrateur",
+                "operationId": "getDashboardStatistics",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_rooms": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                },
+                                                "total_reservations": {
+                                                    "type": "integer",
+                                                    "example": 1250
+                                                },
+                                                "total_users": {
+                                                    "type": "integer",
+                                                    "example": 450
+                                                },
+                                                "total_revenue": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 285000.5
+                                                },
+                                                "reservations_this_week": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "revenue_this_month": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 42500.75
+                                                },
+                                                "occupancy_rate": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 78.5
+                                                },
+                                                "upcoming_reservations": {
+                                                    "type": "integer",
+                                                    "example": 85
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/testimonials": {
+            "get": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Récupérer tous les témoignages",
+                "description": "Récupère la liste de tous les témoignages avec possibilité de filtrage",
+                "operationId": "getAdminTestimonials",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "description": "Note minimale",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 5,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filtrer par utilisateur",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Recherche par titre ou contenu",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Champ pour le tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "rating",
+                                "status"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Ordre de tri",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des témoignages récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Testimonial"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Réinitialisation de mot de passe"
+                ],
+                "summary": "Demander un lien de réinitialisation de mot de passe",
+                "description": "Envoie un email contenant un lien de réinitialisation de mot de passe",
+                "operationId": "forgotPassword",
+                "requestBody": {
+                    "description": "Adresse email de l'utilisateur",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email de réinitialisation de mot de passe envoyé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Adresse email invalide ou utilisateur non trouvé"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Réinitialisation de mot de passe"
+                ],
+                "summary": "Réinitialiser le mot de passe",
+                "description": "Réinitialise le mot de passe de l'utilisateur avec le token fourni par email",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "description": "Données pour la réinitialisation du mot de passe",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "8d8e8fbd3e90954057e991235eff7975e4d26922243e5a52b4333650c"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe réinitialisé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mot de passe réinitialisé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Données invalides ou token expiré"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Inscription d'un nouvel utilisateur",
+                "description": "Permet à un utilisateur de créer un compte",
+                "operationId": "register",
+                "requestBody": {
+                    "description": "Données d'inscription",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Inscription réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResource"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Données d'inscription invalides"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Connexion d'un utilisateur",
+                "description": "Authentifie un utilisateur et retourne un token JWT",
+                "operationId": "login",
+                "requestBody": {
+                    "description": "Données de connexion",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Déconnexion de l'utilisateur",
+                "description": "Déconnecte l'utilisateur actuellement authentifié et invalide son token JWT",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Déconnexion réussie"
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/user/profile": {
+            "get": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Obtenir le profil de l'utilisateur connecté",
+                "description": "Retourne les informations du profil de l'utilisateur actuellement authentifié",
+                "operationId": "getUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profil récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "phone_number": {
+                                                    "type": "string",
+                                                    "example": "+33123456789"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "CLIENT"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Mettre à jour le profil de l'utilisateur",
+                "description": "Permet à l'utilisateur de mettre à jour ses informations personnelles",
+                "operationId": "updateUserProfile",
+                "requestBody": {
+                    "description": "Données du profil à mettre à jour",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "phone_number": {
+                                        "type": "string",
+                                        "example": "+33123456789"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profil mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profil mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "phone_number": {
+                                                    "type": "string",
+                                                    "example": "+33123456789"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "CLIENT"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/user/password": {
+            "put": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Mettre à jour le mot de passe",
+                "description": "Permet à l'utilisateur de changer son mot de passe",
+                "operationId": "updatePassword",
+                "requestBody": {
+                    "description": "Données pour le changement de mot de passe",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "new_password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mot de passe mis à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "LoginRequest": {
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "properties": {
+                    "username": {
+                        "description": "Nom d'utilisateur",
+                        "type": "string",
+                        "example": "jdupont"
+                    },
+                    "password": {
+                        "description": "Mot de passe",
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "required": [
+                    "username",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "username": {
+                        "description": "Nom d'utilisateur",
+                        "type": "string",
+                        "example": "jdupont"
+                    },
+                    "email": {
+                        "description": "Adresse email",
+                        "type": "string",
+                        "format": "email",
+                        "example": "jean.dupont@example.com"
+                    },
+                    "password": {
+                        "description": "Mot de passe",
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "password_confirmation": {
+                        "description": "Confirmation du mot de passe",
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "first_name": {
+                        "description": "Prénom",
+                        "type": "string",
+                        "example": "Jean"
+                    },
+                    "last_name": {
+                        "description": "Nom de famille",
+                        "type": "string",
+                        "example": "Dupont"
+                    },
+                    "phone_number": {
+                        "description": "Numéro de téléphone",
+                        "type": "string",
+                        "example": "0612345678"
+                    }
+                },
+                "type": "object"
+            },
+            "AuthResource": {
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "username": {
+                        "type": "string",
+                        "example": "jdupont"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "CLIENT"
+                    }
+                },
+                "type": "object"
+            },
+            "BlogPost": {
+                "title": "BlogPost",
+                "description": "Modèle d'article de blog",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Les meilleures activités à faire dans notre région"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "les-meilleures-activites-a-faire-dans-notre-region"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "<p>Contenu détaillé de l'article de blog...</p>"
+                    },
+                    "excerpt": {
+                        "type": "string",
+                        "example": "Découvrez notre sélection des meilleures activités à faire lors de votre séjour dans notre région."
+                    },
+                    "featured_image": {
+                        "type": "string",
+                        "example": "blog/image1.jpg",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "published",
+                            "archived"
+                        ],
+                        "example": "published"
+                    },
+                    "author_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "meta_title": {
+                        "type": "string",
+                        "example": "Activités touristiques - Hôtel Paradise",
+                        "nullable": true
+                    },
+                    "meta_description": {
+                        "type": "string",
+                        "example": "Découvrez les meilleures activités touristiques pour profiter de votre séjour à l'Hôtel Paradise.",
+                        "nullable": true
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "author": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "activités"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Message": {
+                "title": "Message",
+                "description": "Modèle de message interne",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sender_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "recipient_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "subject": {
+                        "type": "string",
+                        "example": "Question sur ma réservation"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Bonjour, j'aimerais savoir s'il est possible de modifier les dates de ma réservation..."
+                    },
+                    "read": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "parent_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "deleted_by_sender": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "deleted_by_recipient": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "sender": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "recipient": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "parent": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Message"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "replies": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Message"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedRoomsList": {
+                "title": "Liste paginée de chambres",
+                "description": "Liste paginée de chambres avec métadonnées de pagination",
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Room"
+                        }
+                    },
+                    "first_page_url": {
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/rooms?page=1"
+                    },
+                    "from": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "last_page_url": {
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/rooms?page=5"
+                    },
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "example": "http://localhost:8000/api/v1/rooms?page=1",
+                                    "nullable": true
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "example": "&laquo; Previous"
+                                },
+                                "active": {
+                                    "type": "boolean",
+                                    "example": false
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "next_page_url": {
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/rooms?page=2",
+                        "nullable": true
+                    },
+                    "path": {
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/rooms"
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "prev_page_url": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 50
+                    }
+                },
+                "type": "object"
+            },
+            "Reservation": {
+                "title": "Reservation",
+                "description": "Modèle de réservation de chambre d'hôtel",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "room_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "check_in_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-24"
+                    },
+                    "check_out_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-28"
+                    },
+                    "adults": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "children": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 399.96
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "confirmed",
+                            "checked_in",
+                            "checked_out",
+                            "cancelled"
+                        ],
+                        "example": "confirmed"
+                    },
+                    "special_requests": {
+                        "type": "string",
+                        "example": "Chambre aux étages supérieurs avec vue sur la ville",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "room": {
+                        "$ref": "#/components/schemas/Room"
+                    }
+                },
+                "type": "object"
+            },
+            "Room": {
+                "title": "Room",
+                "description": "Modèle de chambre d'hôtel",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "number": {
+                        "type": "string",
+                        "example": "101"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "standard"
+                    },
+                    "price_per_night": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 99.99
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Chambre standard avec vue sur le jardin"
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "wifi",
+                            "climatisation"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "occupied",
+                            "maintenance"
+                        ],
+                        "example": "available"
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "room_id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "image_path": {
+                                    "type": "string",
+                                    "example": "rooms/room1.jpg"
+                                },
+                                "is_primary": {
+                                    "type": "boolean",
+                                    "example": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Statistic": {
+                "title": "Statistic",
+                "description": "Modèle de statistiques de l'hôtel",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-15"
+                    },
+                    "occupancy_rate": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 85.5
+                    },
+                    "daily_revenue": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2500.75
+                    },
+                    "monthly_revenue": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 75000.25
+                    },
+                    "rooms_available": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "rooms_booked": {
+                        "type": "integer",
+                        "example": 48
+                    },
+                    "total_rooms": {
+                        "type": "integer",
+                        "example": 60
+                    },
+                    "reservations_created": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "users_registered": {
+                        "type": "integer",
+                        "example": 8
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Testimonial": {
+                "title": "Testimonial",
+                "description": "Modèle de témoignage client",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Séjour exceptionnel"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Nous avons passé un séjour merveilleux dans cet hôtel. Le personnel est très attentionné..."
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "example": 5
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ],
+                        "example": "approved"
+                    },
+                    "highlighted": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "admin_notes": {
+                        "type": "string",
+                        "example": "Témoignage très positif à mettre en avant sur la page d'accueil",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "title": "User",
+                "description": "Modèle d'utilisateur du système",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "username": {
+                        "type": "string",
+                        "example": "johndoe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "phone_number": {
+                        "type": "string",
+                        "example": "+33123456789"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "CLIENT"
+                        ],
+                        "example": "CLIENT"
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Utilisez un token JWT pour s'authentifier",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Blog (Admin)",
+            "description": "API de gestion des articles de blog - Partie admin"
+        },
+        {
+            "name": "Messages (Admin)",
+            "description": "API de gestion des messages internes - Partie admin"
+        },
+        {
+            "name": "Réservations (Admin)",
+            "description": "API de gestion des réservations - Partie admin"
+        },
+        {
+            "name": "Chambres (Admin)",
+            "description": "API de gestion des chambres - Partie admin"
+        },
+        {
+            "name": "Statistiques (Admin)",
+            "description": "API de statistiques de l'hôtel - Partie admin"
+        },
+        {
+            "name": "Témoignages (Admin)",
+            "description": "API de gestion des témoignages clients - Partie admin"
+        },
+        {
+            "name": "Réinitialisation de mot de passe",
+            "description": "API pour la réinitialisation de mot de passe"
+        },
+        {
+            "name": "Authentification",
+            "description": "API pour l'authentification des utilisateurs"
+        },
+        {
+            "name": "Utilisateurs",
+            "description": "API pour la gestion des profils utilisateurs"
+        },
+        {
+            "name": "Chambres (Public)",
+            "description": "Chambres (Public)"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}

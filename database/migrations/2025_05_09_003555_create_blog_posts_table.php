@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('content');
-            $table->foreignId('author_id')->constrained('users');
-            $table->string('featured_image')->nullable();
+            $table->text('excerpt')->nullable();
+            $table->string('author');
+            $table->dateTime('date');
+            $table->string('image')->nullable();
+            $table->json('tags')->nullable();
             $table->boolean('published')->default(false);
-            $table->dateTime('published_at')->nullable();
             $table->timestamps();
         });
 

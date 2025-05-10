@@ -28,9 +28,17 @@ class CheckRole
 
         $user = Auth::user();
 
+        // S'assurer que $user->role est bien défini
+        if (!$user->role) {
+            return response()->json([
+                'message' => 'Rôle utilisateur non défini',
+                'success' => false
+            ], 403);
+        }
+
+        // Comparer la valeur de l'enum avec les rôles autorisés
         foreach ($roles as $role) {
-            // Vérifier si le rôle de l'utilisateur correspond à l'un des rôles autorisés
-            if ($user->role && $user->role->value === $role) {
+            if ($user->role->value === $role) {
                 return $next($request);
             }
         }

@@ -17,24 +17,9 @@ class RoomSchema
     public $id;
 
     /**
-     * @OA\Property(property="number", type="string", example="101")
+     * @OA\Property(property="name", type="string", example="101")
      */
-    public $number;
-
-    /**
-     * @OA\Property(property="type", type="string", example="standard")
-     */
-    public $type;
-
-    /**
-     * @OA\Property(property="price_per_night", type="number", format="float", example=99.99)
-     */
-    public $price_per_night;
-
-    /**
-     * @OA\Property(property="capacity", type="integer", example=2)
-     */
-    public $capacity;
+    public $name;
 
     /**
      * @OA\Property(property="description", type="string", example="Chambre standard avec vue sur le jardin")
@@ -42,14 +27,29 @@ class RoomSchema
     public $description;
 
     /**
-     * @OA\Property(property="features", type="array", @OA\Items(type="string"), example={"wifi", "climatisation"})
+     * @OA\Property(property="price", type="number", format="float", example=99.99)
      */
-    public $features;
+    public $price;
 
     /**
-     * @OA\Property(property="status", type="string", enum={"available", "occupied", "maintenance"}, example="available")
+     * @OA\Property(property="capacity", type="integer", example=2)
      */
-    public $status;
+    public $capacity;
+
+    /**
+     * @OA\Property(property="type", type="string", enum={"standard", "deluxe", "suite", "family", "presidential"}, example="standard")
+     */
+    public $type;
+
+    /**
+     * @OA\Property(property="amenities", type="array", @OA\Items(type="string"), example={"wifi", "climatisation"})
+     */
+    public $amenities;
+
+    /**
+     * @OA\Property(property="available", type="boolean", example=true)
+     */
+    public $available;
 
     /**
      * @OA\Property(
@@ -65,4 +65,14 @@ class RoomSchema
      * )
      */
     public $images;
+
+    /**
+     * @OA\Property(property="created_at", type="string", format="date-time")
+     */
+    public $created_at;
+
+    /**
+     * @OA\Property(property="updated_at", type="string", format="date-time")
+     */
+    public $updated_at;
 }

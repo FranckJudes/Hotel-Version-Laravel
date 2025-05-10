@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\RoomStatus;
 use App\Enums\RoomType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,17 +16,14 @@ class Room extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'room_number',
-        'type',
-        'capacity',
-        'price_per_night',
+        'id',
+        'name',
         'description',
-        'status',
-        'has_air_conditioning',
-        'has_tv',
-        'has_minibar',
-        'has_safe',
-        'has_wifi',
+        'price',
+        'capacity',
+        'type',
+        'amenities',
+        'available'
     ];
 
     /**
@@ -37,13 +33,10 @@ class Room extends Model
      */
     protected $casts = [
         'type' => RoomType::class,
-        'status' => RoomStatus::class,
-        'price_per_night' => 'decimal:2',
-        'has_air_conditioning' => 'boolean',
-        'has_tv' => 'boolean',
-        'has_minibar' => 'boolean',
-        'has_safe' => 'boolean',
-        'has_wifi' => 'boolean',
+        'price' => 'integer',
+        'capacity' => 'integer',
+        'amenities' => 'array',
+        'available' => 'boolean',
     ];
 
     /**
@@ -67,6 +60,10 @@ class Room extends Model
      */
     public function isAvailable($checkInDate, $checkOutDate)
     {
+        if (!$this->available) {
+            return false;
+        }
+
         return !$this->reservations()
             ->where(function ($query) use ($checkInDate, $checkOutDate) {
                 $query->whereBetween('check_in_date', [$checkInDate, $checkOutDate])

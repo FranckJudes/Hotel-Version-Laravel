@@ -15,12 +15,12 @@ class Testimonial extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id',
-        'reservation_id',
-        'content',
+        'id',
+        'author',
         'rating',
+        'content',
+        'date',
         'approved',
-        'approved_at',
     ];
 
     /**
@@ -31,16 +31,8 @@ class Testimonial extends Model
     protected $casts = [
         'rating' => 'integer',
         'approved' => 'boolean',
-        'approved_at' => 'datetime',
+        'date' => 'datetime',
     ];
-
-    /**
-     * Get the user that owns the testimonial.
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     /**
      * Get the reservation associated with the testimonial.

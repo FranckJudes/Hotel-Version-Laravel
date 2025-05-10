@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('reservation_id')->constrained();
             $table->string('transaction_id')->unique();
             $table->decimal('amount', 10, 2);
-            $table->enum('status', ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']);
+            $table->string('status');
             $table->string('payment_method');
             $table->text('payment_details')->nullable();
             $table->dateTime('payment_date')->nullable();

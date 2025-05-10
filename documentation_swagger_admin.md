@@ -16,7 +16,6 @@ Pour chaque contrôleur, ajoutez d'abord l'annotation `@OA\Tag` au niveau de la 
 class MonController extends Controller
 {
 ```
-
 ## Documentation des méthodes
 
 Pour chaque méthode, utilisez l'annotation appropriée selon le type d'opération HTTP :

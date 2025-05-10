@@ -59,59 +59,132 @@ class StatisticsController extends Controller
      *     )
      * )
      *
-     * Récupérer les statistiques du tableau de bord
-     *
-     * @return JsonResponse
      */
     public function dashboard(): JsonResponse
     {
-        // Statistiques générales
-        $totalRooms = Room::count();
-        $totalReservations = Reservation::count();
-        $totalUsers = User::where('role', '!=', 'ADMIN')->count();
-        $totalRevenue = Payment::where('status', 'completed')->sum('amount');
-
-        // Réservations cette semaine
-        $weekStart = Carbon::now()->startOfWeek();
-        $weekEnd = Carbon::now()->endOfWeek();
-        $reservationsThisWeek = Reservation::whereBetween('created_at', [$weekStart, $weekEnd])->count();
-
-        // Revenus ce mois
-        $monthStart = Carbon::now()->startOfMonth();
-        $monthEnd = Carbon::now()->endOfMonth();
-        $revenueThisMonth = Payment::where('status', 'completed')
-            ->whereBetween('payment_date', [$monthStart, $monthEnd])
-            ->sum('amount');
-
-        // Taux d'occupation actuel
-        $occupiedRooms = Room::where('status', 'occupied')->count();
-        $occupancyRate = $totalRooms > 0 ? ($occupiedRooms / $totalRooms) * 100 : 0;
+        // Nombre total de réservations
+        $totalBookings = Reservation::count();
 
         // Réservations à venir
-        $upcomingReservations = Reservation::where('check_in_date', '>', Carbon::now())
-            ->where('status', 'confirmed')
-            ->count();
+        $upcomingBookings = Reservation::where('check_in', '>=', now())->count();
+
+        // Chiffre d'affaires
+        $revenueToday = Reservation::whereDate('created_at', today())
+            ->sum('total_price');
+
+        $revenueThisWeek = Reservation::whereBetween('created_at', [now()->startOfWeek(), now()])
+            ->sum('total_price');
+
+        $revenueThisMonth = Reservation::whereBetween('created_at', [now()->startOfMonth(), now()])
+            ->sum('total_price');
+
+        $revenueThisYear = Reservation::whereBetween('created_at', [now()->startOfYear(), now()])
+            ->sum('total_price');
+
+        // Taux d'occupation
+        $totalRooms = Room::count();
+        $occupiedRooms = Reservation::where('status', 'confirmed')
+            ->orWhere('status', 'checked_in')
+            ->where('check_in', '<=', now())
+            ->where('check_out', '>=', now())
+            ->distinct('room_id')
+            ->count('room_id');
+
+        $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
+
+        // Nombre total de clients
+        $totalCustomers = Reservation::distinct('customer_email')->count('customer_email');
+
+        // Chambres populaires
+        $popularRooms = Reservation::select('room_id')
+            ->selectRaw('COUNT(*) as booking_count')
+            ->groupBy('room_id')
+            ->orderByDesc('booking_count')
+            ->limit(4)
+            ->with('room:id,name')
+            ->get()
+            ->map(function($reservation) {
+                return [
+                    'roomId' => $reservation->room_id,
+                    'bookingCount' => $reservation->booking_count,
+                    'roomName' => $reservation->room->name
+                ];
+            });
+
+        $dashboardStats = [
+            'totalBookings' => $totalBookings,
+            'upcomingBookings' => $upcomingBookings,
+            'revenue' => [
+                'today' => $revenueToday,
+                'thisWeek' => $revenueThisWeek,
+                'thisMonth' => $revenueThisMonth,
+                'thisYear' => $revenueThisYear,
+            ],
+            'occupancyRate' => $occupancyRate,
+            'totalCustomers' => $totalCustomers,
+            'popularRooms' => $popularRooms,
+        ];
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'total_rooms' => $totalRooms,
-                'total_reservations' => $totalReservations,
-                'total_users' => $totalUsers,
-                'total_revenue' => $totalRevenue,
-                'reservations_this_week' => $reservationsThisWeek,
-                'revenue_this_month' => $revenueThisMonth,
-                'occupancy_rate' => round($occupancyRate, 2),
-                'upcoming_reservations' => $upcomingReservations
-            ]
+            'data' => $dashboardStats
         ]);
     }
-
-    /**
-     * Revenus par période
-     *
-     * @param Request $request
-     * @return JsonResponse
+     /**
+     * @OA\Get(
+     *     path="/api/v1/admin/statistics/revenue",
+     *     summary="Récupérer les revenus par période",
+     *     description="Récupère les revenus par période (jour, semaine, mois, année)",
+     *     operationId="getRevenueStatistics",
+     *     tags={"Statistiques (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         description="Période pour le calcul des revenus",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"day", "week", "month", "year"}, example="month")
+     *     ),
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Date de début pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="Date de fin pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Revenus récupérés avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="date", type="string", format="date", example="2023-10-01"),
+     *                     @OA\Property(property="total", type="number", format="float", example=12500.75)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function revenue(Request $request): JsonResponse
     {
@@ -180,12 +253,65 @@ class StatisticsController extends Controller
             ]);
         }
     }
-
-    /**
-     * Taux d'occupation par période
-     *
-     * @param Request $request
-     * @return JsonResponse
+      /**
+     * @OA\Get(
+     *     path="/api/v1/admin/statistics/occupancy",
+     *     summary="Récupérer le taux d'occupation par période",
+     *     description="Récupère le taux d'occupation par période (jour, mois, année)",
+     *     operationId="getOccupancyStatistics",
+     *     tags={"Statistiques (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         description="Période pour le calcul du taux d'occupation",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"day", "month", "year"}, example="month")
+     *     ),
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Date de début pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="Date de fin pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Taux d'occupation récupérés avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="date", type="string", format="date", example="2023-10-01"),
+     *                     @OA\Property(property="occupancy_rate", type="number", format="float", example=78.5)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Aucune chambre disponible pour calculer le taux d'occupation"
+     *     )
+     * )
      */
     public function occupancy(Request $request): JsonResponse
     {
@@ -343,12 +469,54 @@ class StatisticsController extends Controller
             ]);
         }
     }
-
     /**
-     * Popularité des types de chambres
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Get(
+     *     path="/api/v1/admin/statistics/room-type-popularity",
+     *     summary="Récupérer la popularité des types de chambres",
+     *     description="Récupère la popularité des types de chambres sur une période donnée",
+     *     operationId="getRoomTypePopularity",
+     *     tags={"Statistiques (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Date de début pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="Date de fin pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Popularité des types de chambres récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="type", type="string", example="standard"),
+     *                     @OA\Property(property="reservation_count", type="integer", example=120)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function roomTypePopularity(Request $request): JsonResponse
     {
@@ -371,9 +539,35 @@ class StatisticsController extends Controller
     }
 
     /**
-     * Sauvegarde des statistiques actuelles (pour historique)
-     *
-     * @return JsonResponse
+     * @OA\Post(
+     *     path="/api/v1/admin/statistics/save",
+     *     summary="Sauvegarder les statistiques actuelles",
+     *     description="Sauvegarde les statistiques actuelles pour l'historique",
+     *     operationId="saveCurrentStatistics",
+     *     tags={"Statistiques (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statistiques enregistrées avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Statistiques enregistrées avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/Statistic"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function saveCurrentStats(): JsonResponse
     {
@@ -421,11 +615,50 @@ class StatisticsController extends Controller
         ]);
     }
 
-    /**
-     * Récupérer l'historique des statistiques
-     *
-     * @param Request $request
-     * @return JsonResponse
+   /**
+     * @OA\Get(
+     *     path="/api/v1/admin/statistics/history",
+     *     summary="Récupérer l'historique des statistiques",
+     *     description="Récupère l'historique des statistiques sur une période donnée",
+     *     operationId="getStatisticsHistory",
+     *     tags={"Statistiques (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Date de début pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="Date de fin pour le filtrage",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Historique des statistiques récupéré avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Statistic")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function getStatsHistory(Request $request): JsonResponse
     {

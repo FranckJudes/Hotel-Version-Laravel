@@ -17,54 +17,59 @@ class ReservationSchema
     public $id;
 
     /**
-     * @OA\Property(property="user_id", type="integer", example=1)
-     */
-    public $user_id;
-
-    /**
      * @OA\Property(property="room_id", type="integer", example=1)
      */
     public $room_id;
 
     /**
-     * @OA\Property(property="check_in_date", type="string", format="date", example="2023-12-24")
+     * @OA\Property(property="customer_name", type="string", example="John Doe")
      */
-    public $check_in_date;
+    public $customer_name;
 
     /**
-     * @OA\Property(property="check_out_date", type="string", format="date", example="2023-12-28")
+     * @OA\Property(property="customer_email", type="string", example="john.doe@example.com")
      */
-    public $check_out_date;
+    public $customer_email;
 
     /**
-     * @OA\Property(property="adults", type="integer", example=2)
+     * @OA\Property(property="customer_phone", type="string", example="+2250101010101")
      */
-    public $adults;
+    public $customer_phone;
 
     /**
-     * @OA\Property(property="children", type="integer", example=1)
+     * @OA\Property(property="check_in", type="string", format="date-time", example="2023-12-24T14:00:00Z")
      */
-    public $children;
+    public $check_in;
 
     /**
-     * @OA\Property(property="total_amount", type="number", format="float", example=399.96)
+     * @OA\Property(property="check_out", type="string", format="date-time", example="2023-12-28T12:00:00Z")
      */
-    public $total_amount;
+    public $check_out;
 
     /**
-     * @OA\Property(property="status", type="string", enum={"pending", "confirmed", "checked_in", "checked_out", "cancelled"}, example="confirmed")
+     * @OA\Property(property="status", type="string", enum={"pending", "confirmed", "checked_in", "checked_out", "cancelled", "completed"}, example="confirmed")
      */
     public $status;
 
     /**
-     * @OA\Property(property="special_requests", type="string", nullable=true, example="Chambre aux étages supérieurs avec vue sur la ville")
+     * @OA\Property(property="total_price", type="number", format="float", example=399.96)
      */
-    public $special_requests;
+    public $total_price;
 
     /**
-     * @OA\Property(property="notes", type="string", nullable=true)
+     * @OA\Property(property="payment_method", type="string", enum={"credit_card", "cash", "bank_transfer", "orange_money", "mtn_mobile_money"}, example="credit_card")
      */
-    public $notes;
+    public $payment_method;
+
+    /**
+     * @OA\Property(property="payment_status", type="string", enum={"pending", "paid", "failed", "refunded"}, example="paid")
+     */
+    public $payment_status;
+
+    /**
+     * @OA\Property(property="guests", type="integer", example=2)
+     */
+    public $guests;
 
     /**
      * @OA\Property(property="created_at", type="string", format="date-time")
@@ -75,11 +80,6 @@ class ReservationSchema
      * @OA\Property(property="updated_at", type="string", format="date-time")
      */
     public $updated_at;
-
-    /**
-     * @OA\Property(property="user", ref="#/components/schemas/User")
-     */
-    public $user;
 
     /**
      * @OA\Property(property="room", ref="#/components/schemas/Room")

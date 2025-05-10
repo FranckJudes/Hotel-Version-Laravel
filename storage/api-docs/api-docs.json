@@ -155,6 +155,611 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Créer un nouvel article de blog",
+                "description": "Création d'un nouvel article de blog par un administrateur",
+                "operationId": "createBlogPost",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Nouvel article"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Contenu de l'article..."
+                                    },
+                                    "excerpt": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Résumé de l'article"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ],
+                                        "example": "draft"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "nouveau"
+                                        }
+                                    },
+                                    "meta_title": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Titre SEO"
+                                    },
+                                    "meta_description": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Description SEO"
+                                    },
+                                    "published_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-01 12:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Article créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Article de blog créé avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BlogPost"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation échouée"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/blog": {
+            "get": {
+                "tags": [
+                    "Blog (Public)"
+                ],
+                "summary": "Récupérer tous les articles publiés du blog (public)",
+                "description": "Récupère la liste des articles publiés avec possibilité de filtrage",
+                "operationId": "getPublicBlogPosts",
+                "parameters": [
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "description": "Filtrer par tag",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Recherche par titre, contenu ou extrait",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des articles publiés récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BlogPost"
+                                        },
+                                        "popular_tags": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BlogPostTag"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/blog/{slug}": {
+            "get": {
+                "tags": [
+                    "Blog (Public)"
+                ],
+                "summary": "Récupérer un article publié par son slug (public)",
+                "description": "Récupère un article publié avec ses informations et des articles similaires",
+                "operationId": "getPublicBlogPostBySlug",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Slug de l'article",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "post": {
+                                                    "$ref": "#/components/schemas/BlogPost"
+                                                },
+                                                "related_posts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/BlogPost"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Article non trouvé ou non publié"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/blog/{id}": {
+            "get": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Récupérer un article spécifique",
+                "description": "Récupère un article de blog par son ID (accès admin)",
+                "operationId": "getAdminBlogPostById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'article",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BlogPost"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Article non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Mettre à jour un article de blog",
+                "description": "Mise à jour d'un article de blog existant par un administrateur",
+                "operationId": "updateBlogPost",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'article à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Titre mis à jour"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Contenu mis à jour..."
+                                    },
+                                    "excerpt": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Résumé mis à jour"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ],
+                                        "example": "published"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "misàjour"
+                                        }
+                                    },
+                                    "meta_title": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Titre SEO mis à jour"
+                                    },
+                                    "meta_description": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Description SEO mise à jour"
+                                    },
+                                    "published_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-01 12:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Article mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Article de blog mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BlogPost"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Article non trouvé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation échouée"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Supprimer un article de blog",
+                "description": "Suppression d'un article de blog par un administrateur",
+                "operationId": "deleteBlogPost",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'article à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Article de blog supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Article non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/blog/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Blog (Admin)"
+                ],
+                "summary": "Changer le statut d'un article de blog",
+                "description": "Modification du statut d'un article de blog (draft/published/archived)",
+                "operationId": "changeBlogPostStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'article",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ],
+                                        "example": "published"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statut de l'article mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BlogPost"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Article non trouvé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation échouée"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/admin/messages/inbox": {
@@ -248,6 +853,816 @@
                     },
                     "403": {
                         "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/sent": {
+            "get": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Récupérer les messages envoyés",
+                "description": "Récupère la liste des messages envoyés avec possibilité de filtrage",
+                "operationId": "getSentMessages",
+                "parameters": [
+                    {
+                        "name": "recipient_id",
+                        "in": "query",
+                        "description": "Filtrer par destinataire",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Recherche dans le sujet ou le contenu",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des messages envoyés récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Message"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/send": {
+            "post": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Envoyer un nouveau message",
+                "description": "Envoie un nouveau message à un utilisateur",
+                "operationId": "sendMessage",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "recipient_id",
+                                    "subject",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "recipient_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Sujet du message"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Contenu du message"
+                                    },
+                                    "parent_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message envoyé avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "404": {
+                        "description": "Destinataire non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/{id}": {
+            "get": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Afficher un message spécifique",
+                "description": "Récupère les détails d'un message spécifique",
+                "operationId": "getMessage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du message",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du message récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Message non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Supprimer un message",
+                "description": "Supprime un message spécifique",
+                "operationId": "deleteMessage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du message",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Message non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/{id}/mark-as-read": {
+            "put": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Marquer un message comme lu",
+                "description": "Marque un message spécifique comme lu",
+                "operationId": "markMessageAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du message",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message marqué comme lu avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marqué comme lu"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Message non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/mark-multiple-as-read": {
+            "put": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Marquer plusieurs messages comme lus",
+                "description": "Marque plusieurs messages comme lus",
+                "operationId": "markMultipleMessagesAsRead",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message_ids"
+                                ],
+                                "properties": {
+                                    "message_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Messages marqués comme lus avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "3 message(s) marqué(s) comme lu(s)"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "updated_count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "unread_count": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/messages/users/autocomplete": {
+            "get": {
+                "tags": [
+                    "Messages (Admin)"
+                ],
+                "summary": "Obtenir la liste des utilisateurs pour l'autocomplétion",
+                "description": "Récupère la liste des utilisateurs pour l'autocomplétion",
+                "operationId": "getUsersForAutocomplete",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Terme de recherche",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "johndoe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "johndoe@example.com"
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "John"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Doe"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reservations": {
+            "get": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Afficher toutes les réservations de l'utilisateur connecté",
+                "description": "Récupère la liste des réservations de l'utilisateur connecté avec possibilité de filtrage",
+                "operationId": "getClientReservations",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "confirmed",
+                                "checked_in",
+                                "checked_out",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "upcoming",
+                        "in": "query",
+                        "description": "Filtrer les réservations à venir",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "past",
+                        "in": "query",
+                        "description": "Filtrer les réservations passées",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Reservation"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Créer une nouvelle réservation",
+                "description": "Crée une nouvelle réservation pour l'utilisateur connecté",
+                "operationId": "createClientReservation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "room_id",
+                                    "check_in",
+                                    "check_out",
+                                    "guests",
+                                    "customer_name",
+                                    "customer_email",
+                                    "customer_phone",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "room_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "check_in": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-01"
+                                    },
+                                    "check_out": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-10"
+                                    },
+                                    "guests": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Doe"
+                                    },
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255,
+                                        "example": "john@example.com"
+                                    },
+                                    "customer_phone": {
+                                        "type": "string",
+                                        "maxLength": 20,
+                                        "example": "+2250000000"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "orange_money",
+                                            "mtn_mobile_money",
+                                            "credit_card",
+                                            "cash"
+                                        ],
+                                        "example": "orange_money"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Réservation créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation créée avec succès. Veuillez procéder au paiement pour confirmer."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "400": {
+                        "description": "La chambre n'est pas disponible pour les dates sélectionnées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reservations/{id}": {
+            "get": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Afficher une réservation spécifique",
+                "description": "Récupère les détails d'une réservation spécifique pour l'utilisateur connecté",
+                "operationId": "getClientReservation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la réservation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée ou vous n'êtes pas autorisé à la consulter"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reservations/{id}/cancel": {
+            "put": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Annuler une réservation",
+                "description": "Annule une réservation spécifique pour l'utilisateur connecté",
+                "operationId": "cancelClientReservation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réservation annulée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation annulée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée ou vous n'êtes pas autorisé à la modifier"
+                    },
+                    "400": {
+                        "description": "Les annulations doivent être effectuées au moins 2 jours avant la date d'arrivée"
                     }
                 },
                 "security": [
@@ -406,6 +1821,431 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Créer une nouvelle réservation",
+                "description": "Crée une nouvelle réservation",
+                "operationId": "createReservation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "room_id",
+                                    "check_in_date",
+                                    "check_out_date",
+                                    "adults"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "room_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "check_in_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-01"
+                                    },
+                                    "check_out_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-10"
+                                    },
+                                    "adults": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "children": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "special_requests": {
+                                        "type": "string",
+                                        "example": "Lit bébé requis"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Réservation créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation créée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "400": {
+                        "description": "La chambre n'est pas disponible pour les dates sélectionnées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/reservations/{id}": {
+            "get": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Afficher une réservation spécifique",
+                "description": "Récupère les détails d'une réservation spécifique",
+                "operationId": "getReservation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la réservation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Mettre à jour une réservation",
+                "description": "Met à jour une réservation spécifique",
+                "operationId": "updateReservation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "room_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "check_in_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-01"
+                                    },
+                                    "check_out_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-10"
+                                    },
+                                    "adults": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "children": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "confirmed",
+                                            "checked_in",
+                                            "checked_out",
+                                            "cancelled",
+                                            "completed"
+                                        ],
+                                        "example": "confirmed"
+                                    },
+                                    "special_requests": {
+                                        "type": "string",
+                                        "example": "Lit bébé requis"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Réservation mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation mise à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "400": {
+                        "description": "La chambre n'est pas disponible pour les dates sélectionnées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Supprimer une réservation",
+                "description": "Supprime une réservation spécifique",
+                "operationId": "deleteReservation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réservation supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée"
+                    },
+                    "400": {
+                        "description": "Impossible de supprimer une réservation avec des paiements. Annulez-la plutôt."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/reservations/{id}/status": {
+            "put": {
+                "tags": [
+                    "Réservations (Admin)"
+                ],
+                "summary": "Changer le statut d'une réservation",
+                "description": "Change le statut d'une réservation spécifique",
+                "operationId": "changeReservationStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "confirmed",
+                                            "checked_in",
+                                            "checked_out",
+                                            "cancelled",
+                                            "completed"
+                                        ],
+                                        "example": "confirmed"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Notes supplémentaires"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut de la réservation mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statut de la réservation mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Reservation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/admin/rooms": {
@@ -435,7 +2275,7 @@
                                                         "type": "integer",
                                                         "example": 1
                                                     },
-                                                    "number": {
+                                                    "name": {
                                                         "type": "string",
                                                         "example": "101"
                                                     },
@@ -443,7 +2283,7 @@
                                                         "type": "string",
                                                         "example": "standard"
                                                     },
-                                                    "price_per_night": {
+                                                    "price": {
                                                         "type": "number",
                                                         "format": "float",
                                                         "example": 99.99
@@ -456,7 +2296,7 @@
                                                         "type": "string",
                                                         "example": "Chambre standard avec vue sur le jardin"
                                                     },
-                                                    "features": {
+                                                    "amenities": {
                                                         "type": "array",
                                                         "items": {
                                                             "type": "string"
@@ -466,14 +2306,9 @@
                                                             "climatisation"
                                                         ]
                                                     },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "available",
-                                                            "occupied",
-                                                            "maintenance"
-                                                        ],
-                                                        "example": "available"
+                                                    "available": {
+                                                        "type": "boolean",
+                                                        "example": true
                                                     },
                                                     "images": {
                                                         "type": "array",
@@ -536,23 +2371,24 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "number",
-                                    "type",
-                                    "price_per_night",
-                                    "capacity",
+                                    "name",
                                     "description",
-                                    "status"
+                                    "price",
+                                    "capacity",
+                                    "type",
+                                    "amenities",
+                                    "available"
                                 ],
                                 "properties": {
-                                    "number": {
+                                    "name": {
                                         "type": "string",
                                         "example": "101"
                                     },
-                                    "type": {
+                                    "description": {
                                         "type": "string",
-                                        "example": "standard"
+                                        "example": "Chambre standard avec vue sur le jardin"
                                     },
-                                    "price_per_night": {
+                                    "price": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 99.99
@@ -561,11 +2397,11 @@
                                         "type": "integer",
                                         "example": 2
                                     },
-                                    "description": {
+                                    "type": {
                                         "type": "string",
-                                        "example": "Chambre standard avec vue sur le jardin"
+                                        "example": "standard"
                                     },
-                                    "features": {
+                                    "amenities": {
                                         "type": "array",
                                         "items": {
                                             "type": "string"
@@ -575,14 +2411,9 @@
                                             "climatisation"
                                         ]
                                     },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "available",
-                                            "occupied",
-                                            "maintenance"
-                                        ],
-                                        "example": "available"
+                                    "available": {
+                                        "type": "boolean",
+                                        "example": true
                                     }
                                 },
                                 "type": "object"
@@ -677,7 +2508,7 @@
                         }
                     },
                     {
-                        "name": "features",
+                        "name": "amenities",
                         "in": "query",
                         "description": "Fonctionnalités séparées par des virgules",
                         "required": false,
@@ -693,7 +2524,7 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "price_per_night",
+                                "price",
                                 "capacity"
                             ]
                         }
@@ -751,6 +2582,453 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/v1/admin/rooms/{id}": {
+            "get": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Afficher une chambre spécifique",
+                "description": "Récupère les détails d'une chambre spécifique",
+                "operationId": "getRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la chambre récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Room"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Chambre non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Mettre à jour une chambre",
+                "description": "Met à jour les informations d'une chambre spécifique",
+                "operationId": "updateRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Informations de la chambre à mettre à jour",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "101"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Chambre standard avec vue sur le jardin"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "standard"
+                                    },
+                                    "amenities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "wifi",
+                                            "climatisation"
+                                        ]
+                                    },
+                                    "available": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Chambre mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chambre mise à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Room"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Chambre non trouvée"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Supprimer une chambre",
+                "description": "Supprime une chambre spécifique",
+                "operationId": "deleteRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chambre supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chambre supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Chambre non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/rooms/{id}": {
+            "get": {
+                "tags": [
+                    "Chambres (Public)"
+                ],
+                "summary": "Afficher une chambre spécifique (endpoint public)",
+                "description": "Récupère les détails d'une chambre spécifique disponible",
+                "operationId": "getPublicRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la chambre récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "room": {
+                                                    "$ref": "#/components/schemas/Room"
+                                                },
+                                                "availability": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-12-01"
+                                                            },
+                                                            "available": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chambre non trouvée ou non disponible"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/rooms/{id}/images": {
+            "post": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Ajouter des images à une chambre",
+                "description": "Ajoute des images à une chambre spécifique",
+                "operationId": "addRoomImages",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Images à ajouter",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "images"
+                                ],
+                                "properties": {
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "primary_index": {
+                                        "description": "Index de l'image principale dans le tableau des images",
+                                        "type": "integer",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Images ajoutées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Images ajoutées avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/RoomImage"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Chambre non trouvée"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/rooms/{roomId}/images/{imageId}": {
+            "delete": {
+                "tags": [
+                    "Chambres (Admin)"
+                ],
+                "summary": "Supprimer une image de chambre",
+                "description": "Supprime une image spécifique d'une chambre",
+                "operationId": "deleteRoomImage",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "description": "ID de la chambre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "imageId",
+                        "in": "path",
+                        "description": "ID de l'image",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Image supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Image supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Image non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/admin/statistics/dashboard": {
@@ -811,6 +3089,388 @@
                                                 }
                                             },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/statistics/revenue": {
+            "get": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Récupérer les revenus par période",
+                "description": "Récupère les revenus par période (jour, semaine, mois, année)",
+                "operationId": "getRevenueStatistics",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Période pour le calcul des revenus",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "day",
+                                "week",
+                                "month",
+                                "year"
+                            ],
+                            "example": "month"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Revenus récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2023-10-01"
+                                                    },
+                                                    "total": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 12500.75
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/statistics/occupancy": {
+            "get": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Récupérer le taux d'occupation par période",
+                "description": "Récupère le taux d'occupation par période (jour, mois, année)",
+                "operationId": "getOccupancyStatistics",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Période pour le calcul du taux d'occupation",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "day",
+                                "month",
+                                "year"
+                            ],
+                            "example": "month"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Taux d'occupation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2023-10-01"
+                                                    },
+                                                    "occupancy_rate": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 78.5
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "400": {
+                        "description": "Aucune chambre disponible pour calculer le taux d'occupation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/statistics/room-type-popularity": {
+            "get": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Récupérer la popularité des types de chambres",
+                "description": "Récupère la popularité des types de chambres sur une période donnée",
+                "operationId": "getRoomTypePopularity",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Popularité des types de chambres récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "standard"
+                                                    },
+                                                    "reservation_count": {
+                                                        "type": "integer",
+                                                        "example": 120
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/statistics/save": {
+            "post": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Sauvegarder les statistiques actuelles",
+                "description": "Sauvegarde les statistiques actuelles pour l'historique",
+                "operationId": "saveCurrentStatistics",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques enregistrées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statistiques enregistrées avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Statistic"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/statistics/history": {
+            "get": {
+                "tags": [
+                    "Statistiques (Admin)"
+                ],
+                "summary": "Récupérer l'historique des statistiques",
+                "description": "Récupère l'historique des statistiques sur une période donnée",
+                "operationId": "getStatisticsHistory",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin pour le filtrage",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique des statistiques récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Statistic"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -962,6 +3622,764 @@
                     },
                     "403": {
                         "description": "Accès interdit - Droits administrateur requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/testimonials/approuved": {
+            "get": {
+                "tags": [
+                    "Témoignages (Public)"
+                ],
+                "summary": "Afficher tous les témoignages approuvés (endpoint public)",
+                "description": "Récupère la liste des témoignages approuvés avec possibilité de filtrage",
+                "operationId": "getPublicTestimonials",
+                "parameters": [
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "description": "Note minimale",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 5,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "highlighted_only",
+                        "in": "query",
+                        "description": "Récupérer uniquement les témoignages mis en avant",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des témoignages récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Testimonial"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/testimonials": {
+            "get": {
+                "tags": [
+                    "Témoignages (Client)"
+                ],
+                "summary": "Afficher les témoignages de l'utilisateur connecté",
+                "description": "Récupère la liste des témoignages de l'utilisateur connecté",
+                "operationId": "getClientTestimonials",
+                "responses": {
+                    "200": {
+                        "description": "Liste des témoignages récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Testimonial"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Témoignages (Client)"
+                ],
+                "summary": "Créer un nouveau témoignage (côté client)",
+                "description": "Crée un nouveau témoignage pour l'utilisateur connecté",
+                "operationId": "createClientTestimonial",
+                "requestBody": {
+                    "description": "Informations du témoignage",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content",
+                                    "rating"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Excellent séjour"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "J'ai passé un excellent séjour, tout était parfait."
+                                    },
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Témoignage créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage soumis avec succès. Il sera visible après modération."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    },
+                    "400": {
+                        "description": "Vous avez déjà soumis un témoignage ces 30 derniers jours"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/testimonials/{id}": {
+            "put": {
+                "tags": [
+                    "Témoignages (Client)"
+                ],
+                "summary": "Mettre à jour un témoignage (côté client)",
+                "description": "Met à jour un témoignage spécifique pour l'utilisateur connecté",
+                "operationId": "updateClientTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Informations du témoignage à mettre à jour",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Excellent séjour"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "J'ai passé un excellent séjour, tout était parfait."
+                                    },
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Témoignage mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé ou vous n'êtes pas autorisé à le modifier"
+                    },
+                    "400": {
+                        "description": "Impossible de modifier un témoignage déjà approuvé"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Témoignages (Client)"
+                ],
+                "summary": "Supprimer un témoignage (côté client)",
+                "description": "Supprime un témoignage spécifique pour l'utilisateur connecté",
+                "operationId": "deleteClientTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Témoignage supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé ou vous n'êtes pas autorisé à le supprimer"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/testimonials/{id}": {
+            "get": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Afficher un témoignage spécifique",
+                "description": "Récupère les détails d'un témoignage spécifique",
+                "operationId": "getTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du témoignage récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Mettre à jour un témoignage (modération)",
+                "description": "Met à jour un témoignage spécifique (modération)",
+                "operationId": "updateTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Informations du témoignage à mettre à jour",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "approved",
+                                            "rejected"
+                                        ],
+                                        "example": "approved"
+                                    },
+                                    "admin_notes": {
+                                        "type": "string",
+                                        "example": "Notes de modération"
+                                    },
+                                    "highlighted": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Témoignage mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Supprimer un témoignage",
+                "description": "Supprime un témoignage spécifique",
+                "operationId": "deleteTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Témoignage supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/testimonials/{id}/status": {
+            "put": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Changer le statut d'un témoignage",
+                "description": "Change le statut d'un témoignage spécifique",
+                "operationId": "changeTestimonialStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Nouveau statut du témoignage",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "approved",
+                                            "rejected"
+                                        ],
+                                        "example": "approved"
+                                    },
+                                    "admin_notes": {
+                                        "type": "string",
+                                        "example": "Notes de modération"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut du témoignage mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statut du témoignage mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/testimonials/{id}/highlight": {
+            "put": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Mettre en avant un témoignage",
+                "description": "Met en avant un témoignage spécifique",
+                "operationId": "highlightTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Témoignage mis en avant avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Témoignage mis en avant avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
+                    },
+                    "400": {
+                        "description": "Seuls les témoignages approuvés peuvent être mis en avant"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/testimonials/{id}/unhighlight": {
+            "put": {
+                "tags": [
+                    "Témoignages (Admin)"
+                ],
+                "summary": "Retirer la mise en avant d'un témoignage",
+                "description": "Retire la mise en avant d'un témoignage spécifique",
+                "operationId": "unhighlightTestimonial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du témoignage",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise en avant du témoignage retirée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mise en avant du témoignage retirée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Testimonial"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Droits administrateur requis"
+                    },
+                    "404": {
+                        "description": "Témoignage non trouvé"
                     }
                 },
                 "security": [
@@ -1577,10 +4995,6 @@
                         "type": "string",
                         "example": "Les meilleures activités à faire dans notre région"
                     },
-                    "slug": {
-                        "type": "string",
-                        "example": "les-meilleures-activites-a-faire-dans-notre-region"
-                    },
                     "content": {
                         "type": "string",
                         "example": "<p>Contenu détaillé de l'article de blog...</p>"
@@ -1589,38 +5003,34 @@
                         "type": "string",
                         "example": "Découvrez notre sélection des meilleures activités à faire lors de votre séjour dans notre région."
                     },
-                    "featured_image": {
+                    "author": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-11-15T10:00:00Z"
+                    },
+                    "image": {
                         "type": "string",
                         "example": "blog/image1.jpg",
                         "nullable": true
                     },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "draft",
-                            "published",
-                            "archived"
-                        ],
-                        "example": "published"
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "hotel",
+                            "voyage",
+                            "activités"
+                        ]
                     },
-                    "author_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "meta_title": {
-                        "type": "string",
-                        "example": "Activités touristiques - Hôtel Paradise",
-                        "nullable": true
-                    },
-                    "meta_description": {
-                        "type": "string",
-                        "example": "Découvrez les meilleures activités touristiques pour profiter de votre séjour à l'Hôtel Paradise.",
-                        "nullable": true
-                    },
-                    "published_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true
+                    "published": {
+                        "type": "boolean",
+                        "example": true
                     },
                     "created_at": {
                         "type": "string",
@@ -1629,25 +5039,31 @@
                     "updated_at": {
                         "type": "string",
                         "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "BlogPostTag": {
+                "title": "BlogPostTag",
+                "description": "Modèle de tag associé aux articles de blog",
+                "properties": {
+                    "id": {
+                        "description": "ID du tag",
+                        "type": "integer"
                     },
-                    "author": {
-                        "$ref": "#/components/schemas/User"
+                    "name": {
+                        "description": "Nom du tag",
+                        "type": "string"
                     },
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "id": {
-                                    "type": "integer",
-                                    "example": 1
-                                },
-                                "name": {
-                                    "type": "string",
-                                    "example": "activités"
-                                }
-                            },
-                            "type": "object"
-                        }
+                    "created_at": {
+                        "description": "Date de création du tag",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Date de mise à jour du tag",
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
@@ -1812,36 +5228,31 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "user_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
                     "room_id": {
                         "type": "integer",
                         "example": 1
                     },
-                    "check_in_date": {
+                    "customer_name": {
                         "type": "string",
-                        "format": "date",
-                        "example": "2023-12-24"
+                        "example": "John Doe"
                     },
-                    "check_out_date": {
+                    "customer_email": {
                         "type": "string",
-                        "format": "date",
-                        "example": "2023-12-28"
+                        "example": "john.doe@example.com"
                     },
-                    "adults": {
-                        "type": "integer",
-                        "example": 2
+                    "customer_phone": {
+                        "type": "string",
+                        "example": "+2250101010101"
                     },
-                    "children": {
-                        "type": "integer",
-                        "example": 1
+                    "check_in": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-24T14:00:00Z"
                     },
-                    "total_amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 399.96
+                    "check_out": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-28T12:00:00Z"
                     },
                     "status": {
                         "type": "string",
@@ -1850,18 +5261,40 @@
                             "confirmed",
                             "checked_in",
                             "checked_out",
-                            "cancelled"
+                            "cancelled",
+                            "completed"
                         ],
                         "example": "confirmed"
                     },
-                    "special_requests": {
-                        "type": "string",
-                        "example": "Chambre aux étages supérieurs avec vue sur la ville",
-                        "nullable": true
+                    "total_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 399.96
                     },
-                    "notes": {
+                    "payment_method": {
                         "type": "string",
-                        "nullable": true
+                        "enum": [
+                            "credit_card",
+                            "cash",
+                            "bank_transfer",
+                            "orange_money",
+                            "mtn_mobile_money"
+                        ],
+                        "example": "credit_card"
+                    },
+                    "payment_status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "paid",
+                            "failed",
+                            "refunded"
+                        ],
+                        "example": "paid"
+                    },
+                    "guests": {
+                        "type": "integer",
+                        "example": 2
                     },
                     "created_at": {
                         "type": "string",
@@ -1871,11 +5304,31 @@
                         "type": "string",
                         "format": "date-time"
                     },
-                    "user": {
-                        "$ref": "#/components/schemas/User"
-                    },
                     "room": {
                         "$ref": "#/components/schemas/Room"
+                    }
+                },
+                "type": "object"
+            },
+            "RoomImage": {
+                "title": "RoomImage",
+                "description": "Modèle d'image associée à une chambre",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "room_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "image_path": {
+                        "type": "string",
+                        "example": "rooms/room1.jpg"
+                    },
+                    "is_primary": {
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"
@@ -1888,15 +5341,15 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "number": {
+                    "name": {
                         "type": "string",
                         "example": "101"
                     },
-                    "type": {
+                    "description": {
                         "type": "string",
-                        "example": "standard"
+                        "example": "Chambre standard avec vue sur le jardin"
                     },
-                    "price_per_night": {
+                    "price": {
                         "type": "number",
                         "format": "float",
                         "example": 99.99
@@ -1905,11 +5358,18 @@
                         "type": "integer",
                         "example": 2
                     },
-                    "description": {
+                    "type": {
                         "type": "string",
-                        "example": "Chambre standard avec vue sur le jardin"
+                        "enum": [
+                            "standard",
+                            "deluxe",
+                            "suite",
+                            "family",
+                            "presidential"
+                        ],
+                        "example": "standard"
                     },
-                    "features": {
+                    "amenities": {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -1919,14 +5379,9 @@
                             "climatisation"
                         ]
                     },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "available",
-                            "occupied",
-                            "maintenance"
-                        ],
-                        "example": "available"
+                    "available": {
+                        "type": "boolean",
+                        "example": true
                     },
                     "images": {
                         "type": "array",
@@ -1951,6 +5406,14 @@
                             },
                             "type": "object"
                         }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
@@ -2022,17 +5485,9 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "user_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "title": {
+                    "author": {
                         "type": "string",
-                        "example": "Séjour exceptionnel"
-                    },
-                    "content": {
-                        "type": "string",
-                        "example": "Nous avons passé un séjour merveilleux dans cet hôtel. Le personnel est très attentionné..."
+                        "example": "John Doe"
                     },
                     "rating": {
                         "type": "integer",
@@ -2040,23 +5495,18 @@
                         "minimum": 1,
                         "example": 5
                     },
-                    "status": {
+                    "content": {
                         "type": "string",
-                        "enum": [
-                            "pending",
-                            "approved",
-                            "rejected"
-                        ],
-                        "example": "approved"
+                        "example": "Nous avons passé un séjour merveilleux dans cet hôtel. Le personnel est très attentionné..."
                     },
-                    "highlighted": {
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-11-15T10:00:00Z"
+                    },
+                    "approved": {
                         "type": "boolean",
-                        "example": false
-                    },
-                    "admin_notes": {
-                        "type": "string",
-                        "example": "Témoignage très positif à mettre en avant sur la page d'accueil",
-                        "nullable": true
+                        "example": true
                     },
                     "created_at": {
                         "type": "string",
@@ -2066,8 +5516,8 @@
                         "type": "string",
                         "format": "date-time"
                     },
-                    "user": {
-                        "$ref": "#/components/schemas/User"
+                    "reservation": {
+                        "$ref": "#/components/schemas/Reservation"
                     }
                 },
                 "type": "object"
@@ -2172,8 +5622,20 @@
             "description": "API pour la gestion des profils utilisateurs"
         },
         {
+            "name": "Blog (Public)",
+            "description": "Blog (Public)"
+        },
+        {
             "name": "Chambres (Public)",
             "description": "Chambres (Public)"
+        },
+        {
+            "name": "Témoignages (Public)",
+            "description": "Témoignages (Public)"
+        },
+        {
+            "name": "Témoignages (Client)",
+            "description": "Témoignages (Client)"
         }
     ],
     "security": [

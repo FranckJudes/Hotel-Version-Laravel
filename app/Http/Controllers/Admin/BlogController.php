@@ -106,10 +106,6 @@ class BlogController extends Controller
      *     )
      * )
      *
-     * Afficher tous les articles du blog
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -153,12 +149,52 @@ class BlogController extends Controller
             'data' => $blogPosts
         ]);
     }
-
     /**
-     * Afficher tous les articles publiés du blog (endpoint public)
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Get(
+     *     path="/api/v1/blog",
+     *     summary="Récupérer tous les articles publiés du blog (public)",
+     *     description="Récupère la liste des articles publiés avec possibilité de filtrage",
+     *     operationId="getPublicBlogPosts",
+     *     tags={"Blog (Public)"},
+     *     @OA\Parameter(
+     *         name="tag",
+     *         in="query",
+     *         description="Filtrer par tag",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Recherche par titre, contenu ou extrait",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Nombre d'éléments par page",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des articles publiés récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/BlogPost"
+     *             ),
+     *             @OA\Property(
+     *                 property="popular_tags",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/BlogPostTag")
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function publicIndex(Request $request): JsonResponse
     {
@@ -201,12 +237,46 @@ class BlogController extends Controller
             'popular_tags' => $popularTags
         ]);
     }
-
-    /**
-     * Afficher un article spécifique par son slug (endpoint public)
-     *
-     * @param string $slug
-     * @return JsonResponse
+      /**
+     * @OA\Get(
+     *     path="/api/v1/blog/{slug}",
+     *     summary="Récupérer un article publié par son slug (public)",
+     *     description="Récupère un article publié avec ses informations et des articles similaires",
+     *     operationId="getPublicBlogPostBySlug",
+     *     tags={"Blog (Public)"},
+     *     @OA\Parameter(
+     *         name="slug",
+     *         in="path",
+     *         description="Slug de l'article",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Article récupéré avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="post",
+     *                     ref="#/components/schemas/BlogPost"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="related_posts",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/BlogPost")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Article non trouvé ou non publié"
+     *     )
+     * )
      */
     public function publicShow(string $slug): JsonResponse
     {
@@ -243,26 +313,72 @@ class BlogController extends Controller
             ]
         ]);
     }
-
     /**
-     * Créer un nouvel article de blog
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Post(
+     *     path="/api/v1/admin/blog",
+     *     summary="Créer un nouvel article de blog",
+     *     description="Création d'un nouvel article de blog par un administrateur",
+     *     operationId="createBlogPost",
+     *     tags={"Blog (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","content","status"},
+     *             @OA\Property(property="title", type="string", example="Nouvel article"),
+     *             @OA\Property(property="content", type="string", example="Contenu de l'article..."),
+     *             @OA\Property(property="excerpt", type="string", example="Résumé de l'article", maxLength=500),
+     *             @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}, example="draft"),
+     *             @OA\Property(property="tags", type="array", @OA\Items(type="string", example="nouveau")),
+     *             @OA\Property(property="meta_title", type="string", example="Titre SEO", maxLength=255),
+     *             @OA\Property(property="meta_description", type="string", example="Description SEO", maxLength=500),
+     *             @OA\Property(property="published_at", type="string", format="date-time", example="2023-01-01 12:00:00")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Article créé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Article de blog créé avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/BlogPost"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation échouée"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'excerpt' => 'sometimes|string|max:500',
-            'featured_image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'required|string|in:draft,published,archived',
+            'excerpt' => 'required|string|max:500',
+            'author' => 'required|string|max:255',
+            'date' => 'sometimes|date',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'sometimes|array',
-            'tags.*' => 'string|max:50',
-            'meta_title' => 'sometimes|string|max:255',
-            'meta_description' => 'sometimes|string|max:500',
-            'published_at' => 'sometimes|date'
+            'tags.*' => 'string',
+            'published' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -273,64 +389,80 @@ class BlogController extends Controller
             ], 422);
         }
 
-        // Générer un slug à partir du titre
-        $slug = Str::slug($request->title);
-
-        // Vérifier si le slug existe déjà
-        $slugExists = BlogPost::where('slug', $slug)->exists();
-        if ($slugExists) {
-            $slug = $slug . '-' . time();
-        }
-
-        // Traiter l'image mise en avant
-        $featuredImagePath = null;
-        if ($request->hasFile('featured_image')) {
-            $featuredImagePath = $request->file('featured_image')->store('blog', 'public');
+        // Traiter l'image si elle existe
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('blog', 'public');
         }
 
         // Créer l'article
         $blogPost = BlogPost::create([
             'title' => $request->title,
-            'slug' => $slug,
             'content' => $request->content,
-            'excerpt' => $request->excerpt ?? Str::limit(strip_tags($request->content), 200),
-            'featured_image' => $featuredImagePath,
-            'status' => $request->status,
-            'author_id' => Auth::id(),
-            'meta_title' => $request->meta_title ?? $request->title,
-            'meta_description' => $request->meta_description ?? Str::limit(strip_tags($request->content), 160),
-            'published_at' => $request->published_at ?? ($request->status === 'published' ? now() : null)
+            'excerpt' => $request->excerpt,
+            'author' => $request->author,
+            'date' => $request->date ?? now(),
+            'image' => $imagePath,
+            'tags' => $request->tags ?? [],
+            'published' => $request->boolean('published', false),
         ]);
-
-        // Ajouter les tags
-        if ($request->has('tags') && is_array($request->tags)) {
-            foreach ($request->tags as $tagName) {
-                // Nettoyer et normaliser le tag
-                $tagName = trim(strtolower($tagName));
-                if (empty($tagName)) {
-                    continue;
-                }
-
-                // Créer ou récupérer le tag
-                $tag = BlogPostTag::firstOrCreate(['name' => $tagName]);
-
-                // Associer le tag à l'article
-                $blogPost->tags()->attach($tag->id);
-            }
-        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Article de blog créé avec succès',
-            'data' => $blogPost->load(['author', 'tags'])
+            'message' => 'Article créé avec succès',
+            'data' => [
+                'id' => $blogPost->id,
+                'title' => $blogPost->title,
+                'content' => $blogPost->content,
+                'excerpt' => $blogPost->excerpt,
+                'author' => $blogPost->author,
+                'date' => $blogPost->date,
+                'image' => $blogPost->image ? asset('storage/' . $blogPost->image) : null,
+                'tags' => $blogPost->tags,
+                'published' => $blogPost->published,
+            ]
         ], 201);
     }
-
-    /**
-     * Afficher un article de blog spécifique
-     *
-     * @param int $id
-     * @return JsonResponse
+     /**
+     * @OA\Get(
+     *     path="/api/v1/admin/blog/{id}",
+     *     summary="Récupérer un article spécifique",
+     *     description="Récupère un article de blog par son ID (accès admin)",
+     *     operationId="getAdminBlogPostById",
+     *     tags={"Blog (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'article",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Article récupéré avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/BlogPost"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Article non trouvé"
+     *     )
+     * )
      */
     public function show(int $id): JsonResponse
     {
@@ -348,13 +480,69 @@ class BlogController extends Controller
             'data' => $blogPost
         ]);
     }
-
-    /**
-     * Mettre à jour un article de blog
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
+     /**
+     * @OA\Put(
+     *     path="/api/v1/admin/blog/{id}",
+     *     summary="Mettre à jour un article de blog",
+     *     description="Mise à jour d'un article de blog existant par un administrateur",
+     *     operationId="updateBlogPost",
+     *     tags={"Blog (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'article à mettre à jour",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Titre mis à jour"),
+     *             @OA\Property(property="content", type="string", example="Contenu mis à jour..."),
+     *             @OA\Property(property="excerpt", type="string", example="Résumé mis à jour", maxLength=500),
+     *             @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}, example="published"),
+     *             @OA\Property(property="tags", type="array", @OA\Items(type="string", example="misàjour")),
+     *             @OA\Property(property="meta_title", type="string", example="Titre SEO mis à jour", maxLength=255),
+     *             @OA\Property(property="meta_description", type="string", example="Description SEO mise à jour", maxLength=500),
+     *             @OA\Property(property="published_at", type="string", format="date-time", example="2023-01-01 12:00:00")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Article mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Article de blog mis à jour avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/BlogPost"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Article non trouvé"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation échouée"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function update(Request $request, int $id): JsonResponse
     {
@@ -363,7 +551,7 @@ class BlogController extends Controller
         if (!$blogPost) {
             return response()->json([
                 'success' => false,
-                'message' => 'Article de blog non trouvé'
+                'message' => 'Article non trouvé'
             ], 404);
         }
 
@@ -371,13 +559,12 @@ class BlogController extends Controller
             'title' => 'sometimes|string|max:255',
             'content' => 'sometimes|string',
             'excerpt' => 'sometimes|string|max:500',
-            'featured_image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'sometimes|string|in:draft,published,archived',
+            'author' => 'sometimes|string|max:255',
+            'date' => 'sometimes|date',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'sometimes|array',
-            'tags.*' => 'string|max:50',
-            'meta_title' => 'sometimes|string|max:255',
-            'meta_description' => 'sometimes|string|max:500',
-            'published_at' => 'sometimes|date'
+            'tags.*' => 'string',
+            'published' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -388,71 +575,82 @@ class BlogController extends Controller
             ], 422);
         }
 
-        // Mettre à jour le slug si le titre change
-        if ($request->has('title') && $request->title !== $blogPost->title) {
-            $slug = Str::slug($request->title);
-
-            // Vérifier si le slug existe déjà
-            $slugExists = BlogPost::where('slug', $slug)->where('id', '!=', $id)->exists();
-            if ($slugExists) {
-                $slug = $slug . '-' . time();
-            }
-
-            $request->merge(['slug' => $slug]);
-        }
-
-        // Traiter l'image mise en avant
-        if ($request->hasFile('featured_image')) {
+        // Traiter l'image si elle existe
+        if ($request->hasFile('image')) {
             // Supprimer l'ancienne image si elle existe
-            if ($blogPost->featured_image) {
-                Storage::disk('public')->delete($blogPost->featured_image);
+            if ($blogPost->image) {
+                Storage::disk('public')->delete($blogPost->image);
             }
-
-            $featuredImagePath = $request->file('featured_image')->store('blog', 'public');
-            $request->merge(['featured_image' => $featuredImagePath]);
+            $imagePath = $request->file('image')->store('blog', 'public');
+            $blogPost->image = $imagePath;
         }
 
-        // Mettre à jour le champ published_at si le statut passe à "published"
-        if ($request->has('status') && $request->status === 'published' && $blogPost->status !== 'published') {
-            $request->merge(['published_at' => now()]);
-        }
+        // Mettre à jour les autres champs
+        $blogPost->fill($request->only([
+            'title',
+            'content',
+            'excerpt',
+            'author',
+            'date',
+            'tags',
+            'published',
+        ]));
 
-        // Mettre à jour l'article
-        $blogPost->update($request->all());
-
-        // Mettre à jour les tags si fournis
-        if ($request->has('tags') && is_array($request->tags)) {
-            // Détacher tous les tags existants
-            $blogPost->tags()->detach();
-
-            // Ajouter les nouveaux tags
-            foreach ($request->tags as $tagName) {
-                // Nettoyer et normaliser le tag
-                $tagName = trim(strtolower($tagName));
-                if (empty($tagName)) {
-                    continue;
-                }
-
-                // Créer ou récupérer le tag
-                $tag = BlogPostTag::firstOrCreate(['name' => $tagName]);
-
-                // Associer le tag à l'article
-                $blogPost->tags()->attach($tag->id);
-            }
-        }
+        $blogPost->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Article de blog mis à jour avec succès',
-            'data' => $blogPost->fresh(['author', 'tags'])
+            'message' => 'Article mis à jour avec succès',
+            'data' => [
+                'id' => $blogPost->id,
+                'title' => $blogPost->title,
+                'content' => $blogPost->content,
+                'excerpt' => $blogPost->excerpt,
+                'author' => $blogPost->author,
+                'date' => $blogPost->date,
+                'image' => $blogPost->image ? asset('storage/' . $blogPost->image) : null,
+                'tags' => $blogPost->tags,
+                'published' => $blogPost->published,
+            ]
         ]);
     }
-
     /**
-     * Supprimer un article de blog
-     *
-     * @param int $id
-     * @return JsonResponse
+     * @OA\Delete(
+     *     path="/api/v1/admin/blog/{id}",
+     *     summary="Supprimer un article de blog",
+     *     description="Suppression d'un article de blog par un administrateur",
+     *     operationId="deleteBlogPost",
+     *     tags={"Blog (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'article à supprimer",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Article supprimé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Article de blog supprimé avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Article non trouvé"
+     *     )
+     * )
      */
     public function destroy(int $id): JsonResponse
     {
@@ -481,13 +679,63 @@ class BlogController extends Controller
             'message' => 'Article de blog supprimé avec succès'
         ]);
     }
-
-    /**
-     * Changer le statut d'un article de blog
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
+     /**
+     * @OA\Patch(
+     *     path="/api/v1/admin/blog/{id}/status",
+     *     summary="Changer le statut d'un article de blog",
+     *     description="Modification du statut d'un article de blog (draft/published/archived)",
+     *     operationId="changeBlogPostStatus",
+     *     tags={"Blog (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'article",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}, example="published")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Statut de l'article mis à jour avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/BlogPost"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Article non trouvé"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation échouée"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function changeStatus(Request $request, int $id): JsonResponse
     {

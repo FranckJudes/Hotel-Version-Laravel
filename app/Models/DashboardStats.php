@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RoomImage extends Model
+class DashboardStats extends Model
 {
     use HasFactory;
 
@@ -15,9 +15,12 @@ class RoomImage extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'room_id',
-        'image_path',
-        'is_primary',
+        'total_bookings',
+        'upcoming_bookings',
+        'revenue',
+        'occupancy_rate',
+        'total_customers',
+        'popular_rooms',
     ];
 
     /**
@@ -26,14 +29,11 @@ class RoomImage extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_primary' => 'boolean',
+        'total_bookings' => 'integer',
+        'upcoming_bookings' => 'integer',
+        'revenue' => 'array',
+        'occupancy_rate' => 'float',
+        'total_customers' => 'integer',
+        'popular_rooms' => 'array',
     ];
-
-    /**
-     * Get the room that owns the image.
-     */
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
 }

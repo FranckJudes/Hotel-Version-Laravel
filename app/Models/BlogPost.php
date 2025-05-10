@@ -15,12 +15,15 @@ class BlogPost extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'id',
         'title',
         'content',
-        'author_id',
-        'featured_image',
+        'excerpt',
+        'author',
+        'date',
+        'image',
+        'tags',
         'published',
-        'published_at',
     ];
 
     /**
@@ -30,7 +33,8 @@ class BlogPost extends Model
      */
     protected $casts = [
         'published' => 'boolean',
-        'published_at' => 'datetime',
+        'date' => 'datetime',
+        'tags' => 'array',
     ];
 
     /**
@@ -44,7 +48,7 @@ class BlogPost extends Model
     /**
      * Get the tags for the blog post.
      */
-    public function tags()
+    public function blogPostTags()
     {
         return $this->hasMany(BlogPostTag::class);
     }
@@ -54,7 +58,7 @@ class BlogPost extends Model
      */
     public function getTagsArrayAttribute()
     {
-        return $this->tags()->pluck('tag')->toArray();
+        return $this->blogPostTags()->pluck('tag')->toArray();
     }
 
     /**
@@ -63,11 +67,11 @@ class BlogPost extends Model
     public function setTags(array $tags)
     {
         // Delete existing tags
-        $this->tags()->delete();
+        $this->blogPostTags()->delete();
 
         // Create new tags
         foreach ($tags as $tag) {
-            $this->tags()->create(['tag' => $tag]);
+            $this->blogPostTags()->create(['tag' => $tag]);
         }
     }
 

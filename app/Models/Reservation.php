@@ -16,15 +16,19 @@ class Reservation extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'reservation_number',
-        'user_id',
+        'id',
         'room_id',
-        'check_in_date',
-        'check_out_date',
-        'number_of_guests',
-        'total_price',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
+        'check_in',
+        'check_out',
         'status',
-        'special_requests',
+        'total_price',
+        'payment_method',
+        'payment_status',
+        'created_at',
+        'guests',
     ];
 
     /**
@@ -33,9 +37,11 @@ class Reservation extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'check_in_date' => 'date',
-        'check_out_date' => 'date',
-        'total_price' => 'decimal:2',
+        'check_in' => 'datetime',
+        'check_out' => 'datetime',
+        'created_at' => 'datetime',
+        'total_price' => 'integer',
+        'guests' => 'integer',
         'status' => ReservationStatus::class,
     ];
 
@@ -76,7 +82,7 @@ class Reservation extends Model
      */
     public function getDurationAttribute()
     {
-        return $this->check_in_date->diffInDays($this->check_out_date);
+        return $this->check_in->diffInDays($this->check_out);
     }
 
     /**

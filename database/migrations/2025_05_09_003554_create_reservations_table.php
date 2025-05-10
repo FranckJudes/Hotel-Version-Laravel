@@ -13,15 +13,17 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->string('reservation_number')->unique();
-            $table->foreignId('user_id')->constrained();
             $table->foreignId('room_id')->constrained();
-            $table->date('check_in_date');
-            $table->date('check_out_date');
-            $table->integer('number_of_guests');
-            $table->decimal('total_price', 10, 2);
-            $table->enum('status', ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'NO_SHOW']);
-            $table->text('special_requests')->nullable();
+            $table->string('customer_name');
+            $table->string('customer_email');
+            $table->string('customer_phone');
+            $table->dateTime('check_in');
+            $table->dateTime('check_out');
+            $table->string('status')->default('pending');
+            $table->integer('total_price');
+            $table->string('payment_method');
+            $table->string('payment_status')->default('pending');
+            $table->integer('guests');
             $table->timestamps();
         });
     }

@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('testimonials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('reservation_id')->nullable()->constrained();
-            $table->text('content');
+            $table->string('author');
             $table->integer('rating')->comment('Rating from 1 to 5');
+            $table->text('content');
+            $table->dateTime('date');
             $table->boolean('approved')->default(false);
-            $table->dateTime('approved_at')->nullable();
+            $table->foreignId('reservation_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }

@@ -83,11 +83,6 @@ class MessageController extends Controller
      *         description="Accès interdit - Droits administrateur requis"
      *     )
      * )
-     *
-     * Afficher tous les messages (boîte de réception)
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function inbox(Request $request): JsonResponse
     {
@@ -124,12 +119,63 @@ class MessageController extends Controller
             'unread_count' => Message::where('recipient_id', Auth::id())->where('read', false)->count()
         ]);
     }
-
-    /**
-     * Afficher tous les messages envoyés
-     *
-     * @param Request $request
-     * @return JsonResponse
+     /**
+     * @OA\Get(
+     *     path="/api/v1/admin/messages/sent",
+     *     summary="Récupérer les messages envoyés",
+     *     description="Récupère la liste des messages envoyés avec possibilité de filtrage",
+     *     operationId="getSentMessages",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="recipient_id",
+     *         in="query",
+     *         description="Filtrer par destinataire",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Recherche dans le sujet ou le contenu",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Nombre d'éléments par page",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des messages envoyés récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/Message")
+     *                 ),
+     *                 @OA\Property(property="total", type="integer", example=20)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function sent(Request $request): JsonResponse
     {
@@ -162,10 +208,53 @@ class MessageController extends Controller
     }
 
     /**
-     * Envoyer un nouveau message
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Post(
+     *     path="/api/v1/admin/messages/send",
+     *     summary="Envoyer un nouveau message",
+     *     description="Envoie un nouveau message à un utilisateur",
+     *     operationId="sendMessage",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"recipient_id", "subject", "content"},
+     *             @OA\Property(property="recipient_id", type="integer", example=1),
+     *             @OA\Property(property="subject", type="string", example="Sujet du message"),
+     *             @OA\Property(property="content", type="string", example="Contenu du message"),
+     *             @OA\Property(property="parent_id", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Message envoyé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Message envoyé avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/Message"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Destinataire non trouvé"
+     *     )
+     * )
      */
     public function send(Request $request): JsonResponse
     {
@@ -208,12 +297,46 @@ class MessageController extends Controller
             'data' => $message->load(['sender', 'recipient'])
         ], 201);
     }
-
-    /**
-     * Afficher un message spécifique
-     *
-     * @param int $id
-     * @return JsonResponse
+        /**
+     * @OA\Get(
+     *     path="/api/v1/admin/messages/{id}",
+     *     summary="Afficher un message spécifique",
+     *     description="Récupère les détails d'un message spécifique",
+     *     operationId="getMessage",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID du message",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Détails du message récupérés avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/Message"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Message non trouvé"
+     *     )
+     * )
      */
     public function show(int $id): JsonResponse
     {
@@ -245,12 +368,47 @@ class MessageController extends Controller
             'data' => $message
         ]);
     }
-
-    /**
-     * Marquer un message comme lu
-     *
-     * @param int $id
-     * @return JsonResponse
+      /**
+     * @OA\Put(
+     *     path="/api/v1/admin/messages/{id}/mark-as-read",
+     *     summary="Marquer un message comme lu",
+     *     description="Marque un message spécifique comme lu",
+     *     operationId="markMessageAsRead",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID du message",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Message marqué comme lu avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Message marqué comme lu"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 ref="#/components/schemas/Message"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Message non trouvé"
+     *     )
+     * )
      */
     public function markAsRead(int $id): JsonResponse
     {
@@ -280,12 +438,54 @@ class MessageController extends Controller
             'data' => $message->fresh(['sender', 'recipient'])
         ]);
     }
-
-    /**
-     * Marquer plusieurs messages comme lus
-     *
-     * @param Request $request
-     * @return JsonResponse
+       /**
+     * @OA\Put(
+     *     path="/api/v1/admin/messages/mark-multiple-as-read",
+     *     summary="Marquer plusieurs messages comme lus",
+     *     description="Marque plusieurs messages comme lus",
+     *     operationId="markMultipleMessagesAsRead",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"message_ids"},
+     *             @OA\Property(
+     *                 property="message_ids",
+     *                 type="array",
+     *                 @OA\Items(type="integer"),
+     *                 example={1, 2, 3}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Messages marqués comme lus avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="3 message(s) marqué(s) comme lu(s)"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="updated_count", type="integer", example=3),
+     *                 @OA\Property(property="unread_count", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation"
+     *     )
+     * )
      */
     public function markMultipleAsRead(Request $request): JsonResponse
     {
@@ -317,12 +517,43 @@ class MessageController extends Controller
             ]
         ]);
     }
-
-    /**
-     * Supprimer un message
-     *
-     * @param int $id
-     * @return JsonResponse
+      /**
+     * @OA\Delete(
+     *     path="/api/v1/admin/messages/{id}",
+     *     summary="Supprimer un message",
+     *     description="Supprime un message spécifique",
+     *     operationId="deleteMessage",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID du message",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Message supprimé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Message supprimé avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Message non trouvé"
+     *     )
+     * )
      */
     public function destroy(int $id): JsonResponse
     {
@@ -366,11 +597,50 @@ class MessageController extends Controller
         ]);
     }
 
-    /**
-     * Obtenir la liste des utilisateurs pour l'autocomplétion
-     *
-     * @param Request $request
-     * @return JsonResponse
+       /**
+     * @OA\Get(
+     *     path="/api/v1/admin/messages/users/autocomplete",
+     *     summary="Obtenir la liste des utilisateurs pour l'autocomplétion",
+     *     description="Récupère la liste des utilisateurs pour l'autocomplétion",
+     *     operationId="getUsersForAutocomplete",
+     *     tags={"Messages (Admin)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="q",
+     *         in="query",
+     *         description="Terme de recherche",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des utilisateurs récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="username", type="string", example="johndoe"),
+     *                     @OA\Property(property="email", type="string", example="johndoe@example.com"),
+     *                     @OA\Property(property="first_name", type="string", example="John"),
+     *                     @OA\Property(property="last_name", type="string", example="Doe")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès interdit - Droits administrateur requis"
+     *     )
+     * )
      */
     public function getUsersForAutocomplete(Request $request): JsonResponse
     {

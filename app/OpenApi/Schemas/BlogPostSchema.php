@@ -22,11 +22,6 @@ class BlogPostSchema
     public $title;
 
     /**
-     * @OA\Property(property="slug", type="string", example="les-meilleures-activites-a-faire-dans-notre-region")
-     */
-    public $slug;
-
-    /**
      * @OA\Property(property="content", type="string", example="<p>Contenu détaillé de l'article de blog...</p>")
      */
     public $content;
@@ -37,34 +32,29 @@ class BlogPostSchema
     public $excerpt;
 
     /**
-     * @OA\Property(property="featured_image", type="string", nullable=true, example="blog/image1.jpg")
+     * @OA\Property(property="author", type="string", example="John Doe")
      */
-    public $featured_image;
+    public $author;
 
     /**
-     * @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}, example="published")
+     * @OA\Property(property="date", type="string", format="date-time", example="2023-11-15T10:00:00Z")
      */
-    public $status;
+    public $date;
 
     /**
-     * @OA\Property(property="author_id", type="integer", example=1)
+     * @OA\Property(property="image", type="string", nullable=true, example="blog/image1.jpg")
      */
-    public $author_id;
+    public $image;
 
     /**
-     * @OA\Property(property="meta_title", type="string", nullable=true, example="Activités touristiques - Hôtel Paradise")
+     * @OA\Property(property="tags", type="array", @OA\Items(type="string"), example={"hotel", "voyage", "activités"})
      */
-    public $meta_title;
+    public $tags;
 
     /**
-     * @OA\Property(property="meta_description", type="string", nullable=true, example="Découvrez les meilleures activités touristiques pour profiter de votre séjour à l'Hôtel Paradise.")
+     * @OA\Property(property="published", type="boolean", example=true)
      */
-    public $meta_description;
-
-    /**
-     * @OA\Property(property="published_at", type="string", format="date-time", nullable=true)
-     */
-    public $published_at;
+    public $published;
 
     /**
      * @OA\Property(property="created_at", type="string", format="date-time")
@@ -75,25 +65,4 @@ class BlogPostSchema
      * @OA\Property(property="updated_at", type="string", format="date-time")
      */
     public $updated_at;
-
-    /**
-     * @OA\Property(
-     *     property="author",
-     *     ref="#/components/schemas/User"
-     * )
-     */
-    public $author;
-
-    /**
-     * @OA\Property(
-     *     property="tags",
-     *     type="array",
-     *     @OA\Items(
-     *         type="object",
-     *         @OA\Property(property="id", type="integer", example=1),
-     *         @OA\Property(property="name", type="string", example="activités")
-     *     )
-     * )
-     */
-    public $tags;
 }
